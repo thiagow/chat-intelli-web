@@ -18,6 +18,13 @@ const channelTypes: { value: ChannelType; label: string; icon: React.ElementType
     description: 'Conecte via Zappfy/Uazapi — sem restrição de 24h',
   },
   {
+    value: 'WHATSAPP_UAZAPI',
+    label: 'WhatsApp (Uazapi)',
+    icon: ZappfyIcon,
+    color: 'bg-zinc-50 dark:bg-zinc-800',
+    description: 'Conecte via Uazapi — botões, listas, enquetes e edição de mensagem',
+  },
+  {
     value: 'WHATSAPP_OFFICIAL',
     label: 'WhatsApp Official',
     icon: MetaIcon,
@@ -43,6 +50,13 @@ const channelTypes: { value: ChannelType; label: string; icon: React.ElementType
 const zappfySchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   token: z.string().min(1, 'Token é obrigatório'),
+  webhookSecret: z.string().optional(),
+});
+
+const uazapiSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
+  token: z.string().min(1, 'Token é obrigatório'),
+  baseUrl: z.string().optional(),
   webhookSecret: z.string().optional(),
 });
 
@@ -72,6 +86,7 @@ const gmailSchema = z.object({
 });
 
 type ZappfyFormData = z.infer<typeof zappfySchema>;
+type UazapiFormData = z.infer<typeof uazapiSchema>;
 type WaOfficialFormData = z.infer<typeof waOfficialSchema>;
 type InstagramFormData = z.infer<typeof instagramSchema>;
 type GmailFormData = z.infer<typeof gmailSchema>;
@@ -115,6 +130,11 @@ export function CreateChannelDialog({ open, onClose, onCreated }: CreateChannelD
     defaultValues: { name: '', email: '', refreshToken: '', draftMode: false },
   });
 
+  const uazapiForm = useForm<UazapiFormData>({
+    resolver: zodResolver(uazapiSchema),
+    defaultValues: { name: '', token: '', baseUrl: '', webhookSecret: '' },
+  });
+
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
   const handleTypeSelect = (type: ChannelType) => {
@@ -144,6 +164,14 @@ export function CreateChannelDialog({ open, onClose, onCreated }: CreateChannelD
 
   const onSubmitZappfy = (data: ZappfyFormData) =>
     submitChannel('WHATSAPP_ZAPPFY', data.name, { token: data.token }, data.webhookSecret);
+
+  const onSubmitUazapi = (data: UazapiFormData) =>
+    submitChannel(
+      'WHATSAPP_UAZAPI',
+      data.name,
+      { token: data.token, baseUrl: data.baseUrl || undefined },
+      data.webhookSecret,
+    );
 
   const onSubmitWaOfficial = (data: WaOfficialFormData) =>
     submitChannel(
@@ -183,6 +211,7 @@ export function CreateChannelDialog({ open, onClose, onCreated }: CreateChannelD
     setStep('type');
     setSelectedType(null);
     zappfyForm.reset();
+    uazapiForm.reset();
     waForm.reset();
     igForm.reset();
     gmailForm.reset();
@@ -193,6 +222,7 @@ export function CreateChannelDialog({ open, onClose, onCreated }: CreateChannelD
 
   const titleMap: Record<string, string> = {
     WHATSAPP_ZAPPFY: 'Configurar Zappfy',
+    WHATSAPP_UAZAPI: 'Configurar Uazapi',
     WHATSAPP_OFFICIAL: 'Configurar WhatsApp Official',
     INSTAGRAM: 'Configurar Instagram',
     GMAIL: 'Configurar Gmail',
@@ -235,6 +265,15 @@ export function CreateChannelDialog({ open, onClose, onCreated }: CreateChannelD
             <Field label="Token" placeholder="Token da instância Zappfy" error={zappfyForm.formState.errors.token?.message} {...zappfyForm.register('token')} />
             <Field label="Webhook Secret" placeholder="Opcional" optional {...zappfyForm.register('webhookSecret')} />
             <WebhookUrl url={`${apiBaseUrl}/webhooks/WHATSAPP_ZAPPFY`} copied={copied} onCopy={() => handleCopyWebhook('WHATSAPP_ZAPPFY')} />
+            <FormFooter isLoading={isLoading} onBack={() => setStep('type')} />
+          </form>
+        ) : selectedType === 'WHATSAPP_UAZAPI' ? (
+          <form onSubmit={uazapiForm.handleSubmit(onSubmitUazapi)} className="mt-6 space-y-4">
+            <Field label="Nome do canal" placeholder="Ex: WhatsApp Vendas" error={uazapiForm.formState.errors.name?.message} {...uazapiForm.register('name')} />
+            <Field label="Token" placeholder="Token da instância Uazapi" error={uazapiForm.formState.errors.token?.message} {...uazapiForm.register('token')} />
+            <Field label="Base URL" placeholder="https://free.uazapi.com (opcional — deixe em branco pro padrão)" optional {...uazapiForm.register('baseUrl')} />
+            <Field label="Webhook Secret" placeholder="Opcional" optional {...uazapiForm.register('webhookSecret')} />
+            <WebhookUrl url={`${apiBaseUrl}/webhooks/WHATSAPP_UAZAPI`} copied={copied} onCopy={() => handleCopyWebhook('WHATSAPP_UAZAPI')} />
             <FormFooter isLoading={isLoading} onBack={() => setStep('type')} />
           </form>
         ) : selectedType === 'WHATSAPP_OFFICIAL' ? (
