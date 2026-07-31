@@ -380,6 +380,18 @@ export const CURATED_MODELS = [
     badge: 'Tarefas simples · mais barato',
     recommendedFor: 'orchestrator',
   },
+  {
+    id: 'openai/gpt-4o',
+    label: 'OpenAI GPT-4o',
+    badge: 'Conversas · provedor alternativo',
+    recommendedFor: 'worker',
+  },
+  {
+    id: 'openai/gpt-4o-mini',
+    label: 'OpenAI GPT-4o mini',
+    badge: 'Tarefas simples · mais barato',
+    recommendedFor: 'orchestrator',
+  },
 ] as const;
 
 export function formatModelLabel(modelId: string): string {
