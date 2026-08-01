@@ -13,6 +13,7 @@ import {
   type AgentMode,
 } from '../services/ai-agents.service';
 import { aiCatalogService } from '../services/ai-catalog.service';
+import { KnowledgeManager } from './knowledge-manager';
 import { channelsService } from '@/features/channels/services/channels.service';
 import { useOrgId } from '@/hooks/use-org-query-key';
 
@@ -327,6 +328,20 @@ export function EditAgentDialog({
 
           {agent && (
             <AgentSkillsAndTools agentId={agent.id} />
+          )}
+
+          {agent && (
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                Base de Conhecimento
+              </h4>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                Documentos específicos para este agente (além da base compartilhada da organização)
+              </p>
+              <div className="mt-4">
+                <KnowledgeManager agentId={agent.id} />
+              </div>
+            </div>
           )}
 
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
