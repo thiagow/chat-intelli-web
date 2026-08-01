@@ -27,12 +27,12 @@ interface OrganizationData {
 
 async function getOrganization(): Promise<OrganizationData> {
   const { data } = await api.get('/organizations/current');
-  return data;
+  return data.data ?? data;
 }
 
 async function updateOrganization(payload: Partial<OrganizationData>) {
   const { data } = await api.patch('/organizations/current', payload);
-  return data;
+  return data.data ?? data;
 }
 
 export default function SettingsGeneralPage() {

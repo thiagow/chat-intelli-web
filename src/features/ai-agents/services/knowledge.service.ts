@@ -19,12 +19,12 @@ class KnowledgeService {
   async list(agentId?: string): Promise<KnowledgeSource[]> {
     const params = agentId ? `?agentId=${agentId}` : '';
     const { data } = await api.get(`/knowledge${params}`);
-    return data;
+    return data.data ?? data;
   }
 
   async get(id: string): Promise<KnowledgeSource> {
     const { data } = await api.get(`/knowledge/${id}`);
-    return data;
+    return data.data ?? data;
   }
 
   async createText(payload: {
@@ -33,7 +33,7 @@ class KnowledgeService {
     agentId?: string;
   }): Promise<KnowledgeSource> {
     const { data } = await api.post('/knowledge', payload);
-    return data;
+    return data.data ?? data;
   }
 
   async uploadPdf(payload: {
@@ -51,7 +51,7 @@ class KnowledgeService {
     const { data } = await api.post('/knowledge/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return data;
+    return data.data ?? data;
   }
 
   async delete(id: string): Promise<void> {
@@ -60,7 +60,7 @@ class KnowledgeService {
 
   async reindex(id: string): Promise<KnowledgeSource> {
     const { data } = await api.post(`/knowledge/${id}/reindex`);
-    return data;
+    return data.data ?? data;
   }
 }
 

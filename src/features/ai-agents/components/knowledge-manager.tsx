@@ -38,19 +38,19 @@ const STATUS_LABELS = {
 async function listKnowledge(agentId?: string) {
   const params = agentId ? `?agentId=${agentId}` : '';
   const { data } = await api.get(`/knowledge${params}`);
-  return data as KnowledgeSource[];
+  return (data.data ?? data) as KnowledgeSource[];
 }
 
 async function createKnowledge(payload: { title: string; content: string; agentId?: string }) {
   const { data } = await api.post('/knowledge', payload);
-  return data;
+  return data.data ?? data;
 }
 
 async function uploadKnowledge(formData: FormData) {
   const { data } = await api.post('/knowledge/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return data;
+  return data.data ?? data;
 }
 
 async function deleteKnowledge(id: string) {
@@ -59,7 +59,7 @@ async function deleteKnowledge(id: string) {
 
 async function reindexKnowledge(id: string) {
   const { data } = await api.post(`/knowledge/${id}/reindex`);
-  return data;
+  return data.data ?? data;
 }
 
 export function KnowledgeManager({ agentId }: KnowledgeManagerProps) {
