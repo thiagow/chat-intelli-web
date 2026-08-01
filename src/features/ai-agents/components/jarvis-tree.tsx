@@ -89,7 +89,7 @@ export function JarvisTree() {
           }`}
         >
           <Bot className="size-5" />
-          <span className="flex-1">Jarvis</span>
+          <span className="flex-1">Central de IA</span>
         </button>
       </div>
 

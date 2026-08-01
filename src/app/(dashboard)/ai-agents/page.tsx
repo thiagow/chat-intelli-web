@@ -36,7 +36,7 @@ export default function AiAgentsPage() {
       <div className="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-950">
         <h1 className="inline-flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
           <Bot className="h-5 w-5 text-primary" />
-          Jarvis
+          Central de IA
           <span className="text-zinc-300 dark:text-zinc-600">/</span>
           <Icon className="h-4 w-4 text-zinc-400" />
           <span className="text-zinc-700 dark:text-zinc-300">{meta.label}</span>
