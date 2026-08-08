@@ -33,20 +33,22 @@ export function AudioMessagePlayer({
   const [error, setError] = useState<string | null>(null);
 
   // Inbound WhatsApp audios arrive with no playable URL — the webhook only
-  // carries an encrypted .enc CDN link. We hit the backend to resolve (and
-  // cache) a decrypted URL on first play. Outbound audios already have
-  // content.mediaUrl pointing to our own upload.
-  const initialMediaUrl = message.content?.mediaUrl as string | undefined;
+  // carries an encrypted .enc CDN link on mmg.whatsapp.net that browsers
+  // can't decrypt. We treat that as "not resolved" so ensureResolved() hits
+  // the backend to resolve (and cache) a decrypted URL on first play, same
+  // rule as `useResolvedMedia`. Outbound audios already have content.mediaUrl
+  // pointing to our own upload, which is always playable as-is.
+  const initialMediaUrl = pickPlayableUrl(message.content?.mediaUrl);
   const [resolvedUrl, setResolvedUrl] = useState<string | undefined>(initialMediaUrl);
   const [resolving, setResolving] = useState(false);
   const mediaUrl = resolvedUrl;
 
   useEffect(() => {
-    setResolvedUrl(message.content?.mediaUrl);
+    setResolvedUrl(pickPlayableUrl(message.content?.mediaUrl));
   }, [message.content?.mediaUrl]);
 
   const ensureResolved = async (): Promise<string | null> => {
-    if (resolvedUrl) return resolvedUrl;
+    if (resolvedUrl && !looksUnplayable(resolvedUrl)) return resolvedUrl;
     setResolving(true);
     try {
       const { url } = await inboxService.resolveMediaUrl(message.id);
@@ -303,4 +305,18 @@ function formatTime(seconds: number): string {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+/**
+ * The webhook from Uazapi/Zappfy stores a .enc URL on `mmg.whatsapp.net`.
+ * Browsers can't decrypt it — same rule as `useResolvedMedia`.
+ */
+function looksUnplayable(u: string): boolean {
+  return /\.enc(\?|$)/i.test(u) || /mmg\.whatsapp\.net/i.test(u);
+}
+
+function pickPlayableUrl(u: unknown): string | undefined {
+  if (typeof u !== 'string' || !u) return undefined;
+  if (looksUnplayable(u)) return undefined;
+  return u;
 }
