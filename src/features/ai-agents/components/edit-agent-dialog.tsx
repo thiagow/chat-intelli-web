@@ -346,9 +346,16 @@ export function EditAgentDialog({
 
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                Canais
-              </h4>
+              <div>
+                <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  Canais
+                </h4>
+                <p className="mt-0.5 text-[11px] text-zinc-500">
+                  {agent.kind === 'ORCHESTRATOR'
+                    ? 'Em modo Autônomo, este agente recebe toda conversa nova dos canais abaixo.'
+                    : 'Especialistas normalmente não precisam de canal — o orquestrador delega para eles.'}
+                </p>
+              </div>
               {!showAddChannel && availableChannels.length > 0 && (
                 <button
                   onClick={() => setShowAddChannel(true)}
@@ -406,8 +413,17 @@ export function EditAgentDialog({
                       {c.channel.name}
                     </span>
                     <span className="ml-2 text-[11px] text-zinc-500">
-                      {c.channel.type} · {c.mode.toLowerCase()}
+                      {c.channel.type}
                     </span>
+                    {c.mode === 'AUTONOMOUS' ? (
+                      <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        atende automaticamente
+                      </span>
+                    ) : (
+                      <span className="ml-2 rounded bg-zinc-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                        {c.mode === 'COPILOT' ? 'só sugere' : 'desativado'}
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={() => handleRemoveChannel(c.channelId)}
