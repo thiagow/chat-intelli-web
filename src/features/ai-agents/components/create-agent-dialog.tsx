@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   aiAgentsService,
@@ -36,6 +36,8 @@ export function CreateAgentDialog({
   const [description, setDescription] = useState('');
   const [kind, setKind] = useState<AgentKind>('WORKER');
   const [category, setCategory] = useState('');
+  const [capabilities, setCapabilities] = useState<string[]>([]);
+  const [capabilityDraft, setCapabilityDraft] = useState('');
   const [modelId, setModelId] = useState(DEFAULT_AGENT_MODEL);
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_PROMPT);
   const [temperature, setTemperature] = useState(0.7);
@@ -75,6 +77,7 @@ export function CreateAgentDialog({
         description: description.trim() || undefined,
         kind,
         category: category.trim() || undefined,
+        capabilities: capabilities.length > 0 ? capabilities : undefined,
         modelId,
         systemPrompt: systemPrompt.trim(),
         temperature,
@@ -100,6 +103,8 @@ export function CreateAgentDialog({
     setDescription('');
     setKind('WORKER');
     setCategory('');
+    setCapabilities([]);
+    setCapabilityDraft('');
     setModelId(DEFAULT_AGENT_MODEL);
     setSystemPrompt(DEFAULT_PROMPT);
     setTemperature(0.7);
@@ -111,6 +116,19 @@ export function CreateAgentDialog({
   // Eligible parents: any agent in the org (the list endpoint already
   // filters soft-deleted ones). Workers can report to workers (multi-level).
   const eligibleParents = agents ?? [];
+
+  const addCapability = () => {
+    const value = capabilityDraft.trim();
+    if (!value || capabilities.includes(value)) {
+      setCapabilityDraft('');
+      return;
+    }
+    setCapabilities((prev) => [...prev, value]);
+    setCapabilityDraft('');
+  };
+
+  const removeCapability = (value: string) =>
+    setCapabilities((prev) => prev.filter((c) => c !== value));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -182,6 +200,57 @@ export function CreateAgentDialog({
                 className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+              Características
+            </label>
+            <p className="mt-0.5 text-[11px] text-zinc-500">
+              Junto com categoria e descrição, é o que o orquestrador vê ao
+              decidir para qual especialista delegar a conversa.
+            </p>
+            <div className="mt-1 flex gap-2">
+              <input
+                type="text"
+                value={capabilityDraft}
+                onChange={(e) => setCapabilityDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addCapability();
+                  }
+                }}
+                placeholder="Ex: negociação de preço"
+                className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              />
+              <button
+                type="button"
+                onClick={addCapability}
+                className="rounded-md bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            {capabilities.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {capabilities.map((cap) => (
+                  <span
+                    key={cap}
+                    className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                  >
+                    {cap}
+                    <button
+                      type="button"
+                      onClick={() => removeCapability(cap)}
+                      className="rounded-full hover:bg-violet-200 dark:hover:bg-violet-800"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Organograma matricial ágil */}
