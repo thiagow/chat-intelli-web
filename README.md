@@ -121,4 +121,34 @@ Imagem Docker multi-stage (`deps` → `builder` → `runner`), rodando como usu�
 
 Intelli Chat é uma plataforma full-stack construída para operações de atendimento reais — multi-canal, multi-organização, com automação e IA como parte do fluxo, não como add-on. Este frontend é a peça que dá forma a tudo isso: tempo real que não quebra em deploy, cache que respeita fronteiras de tenant, e construtores visuais que um time não-técnico consegue operar.
 
-Repositórios relacionados: [`chat-intelli-api`](../chat-intelli-api) (backend NestJS) · [`chat-intelli-mcp`](../chat-intelli-mcp) (servidor MCP para integração com Claude)
+---
+
+## O ecossistema Intelli Chat
+
+Este repositório é uma das três peças da plataforma:
+
+### 🖥️ [`chat-intelli-web`](.) — *este repositório*
+Frontend em Next.js 16 + React 19. Interface do produto: inbox em tempo real, construtores visuais de chatbot/automações, central de agentes de IA, pipelines e configurações — cliente puro da API, sem lógica de servidor própria.
+
+### ⚙️ [`chat-intelli-api`](../chat-intelli-api)
+Backend em NestJS 11, o cérebro da plataforma. Recebe mensagens de WhatsApp/Instagram/Gmail via webhook, processa em pipeline assíncrono orientado a filas (BullMQ + Redis) e roteia para agentes de IA com tool-calling, RAG (pgvector) e roteamento de custo por modelo. Automações rodam sobre um outbox transacional; multi-tenancy e ACL por canal são aplicados via guards em toda a API. Persistência em PostgreSQL via Prisma.
+
+### 🔌 [`chat-intelli-mcp`](../chat-intelli-mcp)
+Servidor [Model Context Protocol](https://modelcontextprotocol.io) que expõe os indicadores do dashboard da Intelli Chat como ferramentas somente-leitura para o Claude — permite perguntar diretamente ao assistente pelas métricas de atendimento, sem sair do Claude Code/Desktop. Proxy fino, multi-tenant por sessão, sem estado ou lógica de negócio própria.
+
+```
+WhatsApp / Instagram / Gmail
+        │
+        ▼
+┌─────────────────────┐        REST + Socket.IO        ┌──────────────────┐
+│  chat-intelli-api    │◀───────────────────────────────▶│  chat-intelli-web │
+│  (NestJS, filas, IA) │                                  │  (Next.js, UI)     │
+└─────────────────────┘                                  └──────────────────┘
+        ▲
+        │  API pública (somente leitura)
+        │
+┌─────────────────────┐
+│  chat-intelli-mcp    │
+│  (ponte para Claude) │
+└─────────────────────┘
+```
