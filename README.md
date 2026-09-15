@@ -1,105 +1,103 @@
 # Intelli Chat — Web
 
-**Frontend da Intelli Chat**, uma plataforma de atendimento omnichannel: caixa de entrada unificada para WhatsApp e outros canais, automações visuais, chatbots com fluxo de nós, agentes de IA configuráveis e um CRM leve (pipelines, contatos, segmentos) — tudo em tempo real.
+**Frontend of Intelli Chat**, an omnichannel customer-service platform: a unified inbox for WhatsApp and other channels, visual automation builders, node-based chatbot flows, configurable AI agents, and a lightweight CRM (pipelines, contacts, segments) — all in real time.
 
-Este repositório é o cliente puro de uma API própria em NestJS ([`chat-intelli-api`](../chat-intelli-api)), consumida via REST e Socket.IO. Não há rotas de API, server actions ou acesso a banco de dados aqui — só interface, estado de cliente e tempo real.
-
-> Interface em português (pt-BR); código e comentários mesclam pt/en, mantendo o padrão do time.
+This repository is a pure client of a separate NestJS API ([`chat-intelli-api`](../chat-intelli-api)), consumed over REST and Socket.IO. There are no API routes, server actions, or database access here — just UI, client state, and realtime.
 
 ---
 
 ## Stack
 
-| Camada | Tecnologia |
+| Layer | Technology |
 |---|---|
-| Framework | [Next.js 16](https://nextjs.org) (App Router) + [React 19](https://react.dev), build com Turbopack |
-| Estilo | [Tailwind CSS 4](https://tailwindcss.com) (PostCSS), dark-first com `next-themes` |
-| Estado de servidor | [TanStack Query](https://tanstack.com/query) — cache, invalidação e sincronização com o backend |
-| Estado de cliente | [Zustand](https://zustand.docs.pmnd.rs) — sessão, organização ativa, permissões |
-| Formulários | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) |
-| Tempo real | [Socket.IO Client](https://socket.io) — singleton com reconexão resiliente |
-| Fluxos visuais | [@xyflow/react](https://reactflow.dev) + [Dagre](https://github.com/dagrejs/dagre) (auto-layout) — chatbot e automações |
-| Drag & drop | [@dnd-kit](https://dndkit.com) — listas ordenáveis, quadros kanban |
-| Gráficos | [Recharts](https://recharts.org) — dashboards e métricas |
-| UI primitiva | Componentes autorais no estilo [Catalyst](https://catalyst.tailwindui.com) (não shadcn) |
-| Animação | [Framer Motion](https://www.framer.com/motion) |
-| Outros | `sonner` (toasts), `lucide-react` (ícones), `axios`, `class-variance-authority` |
-| Linguagem | TypeScript (strict) |
-| Deploy | Docker multi-stage, output `standalone`, healthcheck próprio |
+| Framework | [Next.js 16](https://nextjs.org) (App Router) + [React 19](https://react.dev), built with Turbopack |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com) (PostCSS), dark-first with `next-themes` |
+| Server state | [TanStack Query](https://tanstack.com/query) — caching, invalidation, and sync with the backend |
+| Client state | [Zustand](https://zustand.docs.pmnd.rs) — session, active organization, permissions |
+| Forms | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) |
+| Realtime | [Socket.IO Client](https://socket.io) — a resilient singleton with automatic recovery |
+| Visual flows | [@xyflow/react](https://reactflow.dev) + [Dagre](https://github.com/dagrejs/dagre) (auto-layout) — chatbot and automation builders |
+| Drag & drop | [@dnd-kit](https://dndkit.com) — sortable lists, kanban boards |
+| Charts | [Recharts](https://recharts.org) — dashboards and metrics |
+| UI primitives | Hand-rolled components in a [Catalyst](https://catalyst.tailwindui.com)-style (not shadcn) |
+| Animation | [Framer Motion](https://www.framer.com/motion) |
+| Other | `sonner` (toasts), `lucide-react` (icons), `axios`, `class-variance-authority` |
+| Language | TypeScript (strict) |
+| Deploy | Multi-stage Docker, `standalone` output, built-in healthcheck |
 
 ---
 
-## Funcionalidades
+## Features
 
-### 📥 Inbox omnichannel
-Caixa de entrada unificada em tempo real: lista de conversas, bolhas de mídia (imagem, áudio, vídeo, documento), gravação e transcrição de áudio, atribuição de conversas, popovers de pipeline, indicadores de digitação/status de entrega e ações pendentes de IA — tudo sincronizado via WebSocket sem necessidade de recarregar a página.
+### 📥 Omnichannel inbox
+Unified, real-time inbox: conversation list, media bubbles (image, audio, video, document), audio recording and transcription, conversation assignment, pipeline popovers, typing/delivery-status indicators, and pending AI actions — all synced over WebSocket with no page reload.
 
-### 🤖 Central de IA (AI Agents)
-CRUD completo de agentes de IA, catálogo de modelos, base de conhecimento (knowledge base) por organização e roteamento de mensagens entre agentes. Banner global de falhas de ferramentas para visibilidade operacional imediata.
+### 🤖 AI agents ("Central de IA")
+Full CRUD for AI agents, a model catalog, an organization-scoped knowledge base, and message routing between agents. A global tool-failure banner surfaces operational issues immediately.
 
-### 🔀 Automações & Chatbot
-Construtores visuais de fluxo (nó a nó) sobre React Flow com auto-layout via Dagre — regras de gatilho/ação para automações e árvores de decisão para o chatbot, com nós customizados por tipo.
+### 🔀 Automations & chatbot builders
+Visual, node-based flow builders on React Flow with Dagre auto-layout — trigger/action rules for automations and decision trees for the chatbot, each with custom node types.
 
-### 📊 Pipelines (CRM leve)
-Board kanban arrastável (`@dnd-kit`) para gestão de oportunidades/etapas de atendimento, com contatos e segmentos de clientes vinculados.
+### 📊 Pipelines (lightweight CRM)
+Draggable kanban board (`@dnd-kit`) for managing service/opportunity stages, linked to contacts and customer segments.
 
 ### 📈 Dashboard
-Métricas operacionais e de atendimento visualizadas com Recharts, escopadas por organização.
+Operational and service metrics visualized with Recharts, scoped per organization.
 
-### 👥 Multi-tenant & controle de acesso
-Suporte a múltiplas organizações por usuário, com troca de organização ativa, permissões por canal (`ALL` para OWNER/ADMIN, lista explícita para AGENT) aplicadas tanto no cliente quanto no backend, e revogação de acesso em tempo real via evento de socket (`permissions:updated`) — sem necessidade de novo login.
+### 👥 Multi-tenancy & access control
+Multiple organizations per user with active-org switching, per-channel permissions (`ALL` for OWNER/ADMIN, an explicit list for AGENT) enforced on both client and backend, and real-time access revocation via a socket event (`permissions:updated`) — no re-login required.
 
-### ⚙️ Configurações
-Gestão de canais de comunicação, respostas rápidas, tags, chaves de API, avaliações e preferências da organização.
+### ⚙️ Settings
+Management of communication channels, quick replies, tags, API keys, ratings, and organization preferences.
 
 ---
 
-## Arquitetura
+## Architecture
 
 ```
 src/
-├── app/                        # App Router — rotas finas, orquestram feature + data
-│   ├── (auth)/                 # login, registro
+├── app/                        # App Router — thin routes, wire feature + data together
+│   ├── (auth)/                 # login, register
 │   └── (dashboard)/            # inbox, pipelines, ai-agents, automations, chatbot,
 │                                # contacts, projects, settings, dashboard
-├── features/<domínio>/         # onde a lógica de fato mora
+├── features/<domain>/          # where the actual logic lives
 │   ├── components/
 │   ├── hooks/
-│   ├── services/                # funções de API — camada fina sobre o axios
-│   └── schemas/                 # validação Zod
+│   ├── services/                # API functions — a thin layer over axios
+│   └── schemas/                 # Zod validation
 ├── components/
-│   ├── ui/                      # primitivas autorais (sidebar, navbar, dropdown…)
+│   ├── ui/                      # hand-rolled primitives (sidebar, navbar, dropdown…)
 │   └── layout/
-├── stores/                       # Zustand (sessão/auth)
-├── hooks/                        # hooks globais (ex.: escopo de query por organização)
-└── lib/                           # axios client, singleton de socket, query client, utils
+├── stores/                       # Zustand (session/auth)
+├── hooks/                        # global hooks (e.g. per-organization query scoping)
+└── lib/                           # axios client, socket singleton, query client, utils
 ```
 
-**Princípio de organização:** rotas são finas e delegam para `features/`; cada domínio de negócio (inbox, automations, chatbot, pipelines, channels, contacts, segments, projects, settings, ai-agents, dashboard, auth) é uma fatia vertical autocontida com seus próprios componentes, hooks e serviços.
+**Organizing principle:** routes stay thin and delegate to `features/`; each business domain (inbox, automations, chatbot, pipelines, channels, contacts, segments, projects, settings, ai-agents, dashboard, auth) is a self-contained vertical slice with its own components, hooks, and services.
 
-### Decisões técnicas que valeram a pena documentar
+### Technical decisions worth documenting
 
-- **Envelope de resposta da API.** O backend embrulha toda resposta em `{ data, meta }`. Os serviços desembrulham isso de forma consistente (`response.data.data`) para que um erro de contrato vire falha de tipo em vez de um `x.map is not a function` que derruba a árvore React em produção.
-- **Chaves de cache com escopo de organização.** Como tudo é multi-tenant via header `x-organization-id`, toda query cujo dado varia por organização carrega o `orgId` na chave do React Query — evitando que a troca de organização sirva cache da tenant anterior.
-- **Socket.IO resiliente.** Conexão só se abre com sessão autenticada; reconexão com backoff exponencial e infinita (deploys de ~1 min no backend não devem matar o tempo real); fila de eventos emitidos antes do sinal `ready` do servidor, para não perder um `join:conversation` disparado cedo demais.
-- **Interceptors de autenticação centralizados.** Um único cliente axios injeta token e organização ativa, normaliza erros do NestJS para `Error` simples e faz refresh de token single-shot em 401, com fallback seguro para `/login`.
+- **API response envelope.** The backend wraps every response in `{ data, meta }`. Services consistently unwrap it (`response.data.data`) so a contract mismatch surfaces as a type error instead of an `x.map is not a function` that crashes the React tree in production.
+- **Organization-scoped cache keys.** Since everything is multi-tenant via the `x-organization-id` header, every query whose data varies per organization carries `orgId` in its React Query key — preventing an organization switch from serving the previous tenant's cache.
+- **Resilient Socket.IO.** The connection only opens with an authenticated session; reconnection uses exponential backoff and never gives up (a ~1-minute backend deploy shouldn't kill realtime); events emitted before the server's `ready` signal are queued instead of dropped.
+- **Centralized auth interceptors.** A single axios client injects the token and active organization, normalizes NestJS errors into plain `Error` objects, and performs a single-shot token refresh on 401 with a safe fallback to `/login`.
 
 ---
 
-## Rodando localmente
+## Running locally
 
 ```bash
-# instalar dependências
+# install dependencies
 yarn install
 
-# configurar variáveis de ambiente
+# configure environment variables
 cp .env.example .env.local
 # NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
 
-# desenvolvimento (Turbopack)
+# development (Turbopack)
 yarn dev
 
-# build de produção (standalone, usado pelo Dockerfile)
+# production build (standalone, used by the Dockerfile)
 yarn build
 yarn start
 
@@ -107,34 +105,34 @@ yarn start
 yarn lint
 ```
 
-Requer a API rodando (`chat-intelli-api`) — veja o README daquele repositório para subir o backend completo (PostgreSQL + Redis).
+Requires the API to be running (`chat-intelli-api`) — see that repository's README to spin up the full backend (PostgreSQL + Redis).
 
-> ⚠️ `NEXT_PUBLIC_API_URL` é compilada em tempo de build (o Dockerfile a recebe como build ARG): trocar o backend de ambiente exige rebuild da imagem, não apenas reiniciar o container.
+> ⚠️ `NEXT_PUBLIC_API_URL` is baked in at build time (the Dockerfile receives it as a build ARG): pointing to a different backend environment requires rebuilding the image, not just restarting the container.
 
 ## Deploy
 
-Imagem Docker multi-stage (`deps` → `builder` → `runner`), rodando como usuário não-root, com `tini` como init process e healthcheck HTTP embutido. Output do Next.js em modo `standalone` para uma imagem final mínima.
+Multi-stage Docker image (`deps` → `builder` → `runner`), running as a non-root user, with `tini` as the init process and a built-in HTTP healthcheck. Next.js `standalone` output keeps the final image minimal.
 
 ---
 
-## Sobre este projeto
+## About this project
 
-Intelli Chat é uma plataforma full-stack construída para operações de atendimento reais — multi-canal, multi-organização, com automação e IA como parte do fluxo, não como add-on. Este frontend é a peça que dá forma a tudo isso: tempo real que não quebra em deploy, cache que respeita fronteiras de tenant, e construtores visuais que um time não-técnico consegue operar.
+Intelli Chat is a full-stack platform built for real customer-service operations — multi-channel, multi-organization, with automation and AI as part of the flow, not a bolt-on. This frontend is the piece that gives all of that shape: realtime that survives deploys, a cache that respects tenant boundaries, and visual builders a non-technical team can actually operate.
 
 ---
 
-## O ecossistema Intelli Chat
+## The Intelli Chat ecosystem
 
-Este repositório é uma das três peças da plataforma:
+This repository is one of three pieces that make up the platform:
 
-### 🖥️ [`chat-intelli-web`](.) — *este repositório*
-Frontend em Next.js 16 + React 19. Interface do produto: inbox em tempo real, construtores visuais de chatbot/automações, central de agentes de IA, pipelines e configurações — cliente puro da API, sem lógica de servidor própria.
+### 🖥️ [`chat-intelli-web`](.) — *this repository*
+Frontend built with Next.js 16 + React 19. The product's interface: realtime inbox, visual chatbot/automation builders, an AI agents control center, pipelines, and settings — a pure API client with no server-side logic of its own.
 
 ### ⚙️ [`chat-intelli-api`](../chat-intelli-api)
-Backend em NestJS 11, o cérebro da plataforma. Recebe mensagens de WhatsApp/Instagram/Gmail via webhook, processa em pipeline assíncrono orientado a filas (BullMQ + Redis) e roteia para agentes de IA com tool-calling, RAG (pgvector) e roteamento de custo por modelo. Automações rodam sobre um outbox transacional; multi-tenancy e ACL por canal são aplicados via guards em toda a API. Persistência em PostgreSQL via Prisma.
+Backend built with NestJS 11, the platform's brain. Receives WhatsApp/Instagram/Gmail messages via webhook, processes them through an async, queue-driven pipeline (BullMQ + Redis), and routes them to AI agents with tool-calling, RAG (pgvector), and per-model cost routing. Automations run on a transactional outbox; multi-tenancy and per-channel ACLs are enforced via guards throughout the API. Persistence in PostgreSQL via Prisma.
 
 ### 🔌 [`chat-intelli-mcp`](../chat-intelli-mcp)
-Servidor [Model Context Protocol](https://modelcontextprotocol.io) que expõe os indicadores do dashboard da Intelli Chat como ferramentas somente-leitura para o Claude — permite perguntar diretamente ao assistente pelas métricas de atendimento, sem sair do Claude Code/Desktop. Proxy fino, multi-tenant por sessão, sem estado ou lógica de negócio própria.
+A [Model Context Protocol](https://modelcontextprotocol.io) server that exposes Intelli Chat's dashboard indicators as read-only tools for Claude — ask the assistant directly about service metrics without leaving Claude Code/Desktop. A thin, per-session multi-tenant proxy with no state or business logic of its own.
 
 ```
 WhatsApp / Instagram / Gmail
@@ -142,13 +140,13 @@ WhatsApp / Instagram / Gmail
         ▼
 ┌─────────────────────┐        REST + Socket.IO        ┌──────────────────┐
 │  chat-intelli-api    │◀───────────────────────────────▶│  chat-intelli-web │
-│  (NestJS, filas, IA) │                                  │  (Next.js, UI)     │
+│  (NestJS, queues, AI) │                                 │  (Next.js, UI)     │
 └─────────────────────┘                                  └──────────────────┘
         ▲
-        │  API pública (somente leitura)
+        │  Public API (read-only)
         │
 ┌─────────────────────┐
 │  chat-intelli-mcp    │
-│  (ponte para Claude) │
+│  (bridge to Claude)  │
 └─────────────────────┘
 ```
