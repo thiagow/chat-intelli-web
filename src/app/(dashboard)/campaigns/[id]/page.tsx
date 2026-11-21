@@ -48,6 +48,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     },
     onError: (e: unknown) => toast.error(apiErrorMessage(e)),
   });
+  const start = useMutation(run(() => campaignsService.start(id), 'Campanha iniciada'));
   const pause = useMutation(run(() => campaignsService.pause(id), 'Campanha pausada'));
   const resume = useMutation(run(() => campaignsService.resume(id), 'Campanha retomada'));
   const cancel = useMutation(run(() => campaignsService.cancel(id), 'Campanha cancelada'));
@@ -59,7 +60,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const stats = c.stats ?? {};
   const canPause = ['SUBMITTING', 'SCHEDULED', 'RUNNING'].includes(c.status);
   const canCancel = !['COMPLETED', 'CANCELLED', 'FAILED'].includes(c.status);
-  const busy = pause.isPending || resume.isPending || cancel.isPending || sendNow.isPending;
+  const canStart = ['DRAFT', 'READY'].includes(c.status);
+  const busy = start.isPending || pause.isPending || resume.isPending || cancel.isPending || sendNow.isPending;
 
   return (
     <div className="h-full overflow-y-auto">
@@ -80,6 +82,15 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="flex items-center gap-2">
+            {canStart && (
+              <button
+                disabled={busy}
+                onClick={() => confirm('Iniciar a campanha? As mensagens serão enviadas aos destinatários válidos.') && start.mutate()}
+                className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+              >
+                <Play className="size-4" /> Iniciar campanha
+              </button>
+            )}
             {c.status === 'SCHEDULED' && (
               <button
                 disabled={busy}
