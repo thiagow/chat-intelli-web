@@ -91,7 +91,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                 <Play className="size-4" /> Iniciar campanha
               </button>
             )}
-            {c.status === 'SCHEDULED' && (
+            {['SUBMITTING', 'SCHEDULED'].includes(c.status) && (
               <button
                 disabled={busy}
                 onClick={() => confirm('Antecipar o envio do lote agendado, fora do horário programado?') && sendNow.mutate()}
