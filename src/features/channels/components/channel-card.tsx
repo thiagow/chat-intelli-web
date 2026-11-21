@@ -19,7 +19,9 @@ import {
   QrCode,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Channel } from '../services/channels.service';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useOrgId } from '@/hooks/use-org-query-key';
+import type { Channel, ChannelConnectionStatus } from '../services/channels.service';
 import { channelsService } from '../services/channels.service';
 import { useChannelSync } from '../hooks/use-channel-sync';
 import { ZappfyIcon, MetaIcon, InstagramIcon, GmailIcon } from '@/components/ui/icons';
@@ -34,6 +36,44 @@ const channelTypeMap: Record<string, { label: string; icon: React.ElementType; c
   GMAIL: { label: 'Gmail', icon: GmailIcon, color: 'bg-zinc-50 dark:bg-zinc-800' },
 };
 
+const BADGE = {
+  green: { cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', dot: 'bg-green-500' },
+  amber: { cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', dot: 'bg-amber-500' },
+  red: { cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', dot: 'bg-red-500' },
+  zinc: { cls: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400', dot: 'bg-zinc-400' },
+} as const;
+
+/**
+ * Badge do card. Canal desligado na plataforma → "Inativo". WhatsApp UaZAPI → estado real da
+ * sessão (Conectado / Hibernada / Desconectado), nunca "Ativo" só porque o interruptor está ligado.
+ */
+function connectionBadge(
+  isActive: boolean,
+  isUazapi: boolean,
+  q: { data?: ChannelConnectionStatus; isLoading: boolean; isError: boolean },
+) {
+  if (!isActive) return { label: 'Inativo', title: 'Canal desativado na plataforma', ...BADGE.zinc };
+  if (!isUazapi) return { label: 'Ativo', title: 'Canal ativo na plataforma', ...BADGE.green };
+  if (q.isLoading) return { label: 'Verificando…', title: 'Consultando a UaZAPI', ...BADGE.zinc };
+  const d = q.data;
+  if (q.isError || !d || !d.supported) {
+    return { label: 'Estado desconhecido', title: 'Não foi possível consultar a UaZAPI', ...BADGE.zinc };
+  }
+  if (d.connected === true) return { label: 'Conectado', title: 'Sessão do WhatsApp ativa', ...BADGE.green };
+  if (d.connected === null) return { label: 'Estado desconhecido', title: 'Resposta da UaZAPI não reconhecida', ...BADGE.zinc };
+  const label =
+    d.state === 'hibernated' ? 'Hibernada'
+    : d.state === 'connecting' ? 'Conectando'
+    : d.state === 'unauthorized' ? 'Token recusado'
+    : d.state === 'unreachable' ? 'Servidor inacessível'
+    : 'Desconectado';
+  return {
+    label,
+    title: `WhatsApp ${d.label ?? label.toLowerCase()} — use "Reconectar"`,
+    ...(d.state === 'connecting' ? BADGE.amber : BADGE.red),
+  };
+}
+
 interface ChannelCardProps {
   channel: Channel;
   onUpdate: () => void;
@@ -47,6 +87,20 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
   const meta = channelTypeMap[channel.type] || { label: channel.type, icon: MessageSquare, color: 'bg-gray-500' };
   const Icon = meta.icon;
   const sync = useChannelSync({ channelId: channel.id, channelType: channel.type });
+
+  // Estado real da sessão (UaZAPI). "Ativo/Inativo" é só o interruptor da plataforma.
+  const orgId = useOrgId();
+  const qc = useQueryClient();
+  const isUazapi = channel.type === 'WHATSAPP_UAZAPI';
+  const connQuery = useQuery({
+    queryKey: ['channel-connection', orgId, channel.id, channel.updatedAt],
+    queryFn: () => channelsService.getConnectionStatus(channel.id),
+    enabled: isUazapi && channel.isActive,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const refreshConnection = () => qc.invalidateQueries({ queryKey: ['channel-connection', orgId, channel.id] });
+  const badge = connectionBadge(channel.isActive, isUazapi, connQuery);
 
   const handleTest = async () => {
     setIsTesting(true);
@@ -68,6 +122,7 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
       toast.error(err instanceof Error ? err.message : 'Erro ao testar conexão');
     } finally {
       setIsTesting(false);
+      void refreshConnection();
     }
   };
 
@@ -160,13 +215,11 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
             {channel.name}
           </h3>
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              channel.isActive
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
-            }`}
+            title={badge.title}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}
           >
-            {channel.isActive ? 'Ativo' : 'Inativo'}
+            <span className={`size-1.5 rounded-full ${badge.dot}`} />
+            {badge.label}
           </span>
           {channel.visibility === 'PRIVATE' && (
             <span
@@ -327,12 +380,18 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
       <ReconnectChannelDialog
         channel={reconnecting ? channel : null}
         onClose={() => setReconnecting(false)}
-        onConnected={onUpdate}
+        onConnected={() => {
+          void refreshConnection();
+          onUpdate();
+        }}
       />
       <EditChannelDialog
         channel={editing ? channel : null}
         onClose={() => setEditing(false)}
-        onSaved={onUpdate}
+        onSaved={() => {
+          void refreshConnection();
+          onUpdate();
+        }}
       />
     </div>
   );

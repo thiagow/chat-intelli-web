@@ -49,6 +49,15 @@ export interface TestConnectionResult {
   data?: any;
 }
 
+export interface ChannelConnectionStatus {
+  /** false = tipo de canal sem sessão própria (mantém o badge ativo/inativo). */
+  supported: boolean;
+  /** null = estado não reconhecido. */
+  connected?: boolean | null;
+  state?: string;
+  label?: string;
+}
+
 export interface ConnectChannelResult {
   alreadyConnected: boolean;
   state: string;
@@ -112,6 +121,11 @@ export const channelsService = {
 
   async testConnection(id: string): Promise<TestConnectionResult> {
     const { data } = await api.post<{ data: TestConnectionResult }>(`/channels/${id}/test`);
+    return data.data;
+  },
+
+  async getConnectionStatus(id: string): Promise<ChannelConnectionStatus> {
+    const { data } = await api.get<{ data: ChannelConnectionStatus }>(`/channels/${id}/connection`);
     return data.data;
   },
 
