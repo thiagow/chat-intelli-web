@@ -9,12 +9,16 @@ import {
   ChevronUp,
   Zap,
   FolderKanban,
+  Megaphone,
 } from 'lucide-react';
 import { InboxTree } from '@/features/inbox-views/components/inbox-tree';
 import { JarvisTree } from '@/features/ai-agents/components/jarvis-tree';
 import { PipelinesTree } from '@/features/pipelines/components/pipelines-tree';
 
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
+import { useOrgId } from '@/hooks/use-org-query-key';
+import { campaignsService } from '@/features/campaigns/services/campaigns.service';
 import { Avatar } from '@/components/ui/avatar';
 import {
   Sidebar,
@@ -40,6 +44,24 @@ const navItems = [
   { href: '/projects', label: 'Projetos', icon: FolderKanban },
   { href: '/automations', label: 'Automações', icon: Zap },
 ];
+
+/** Só aparece quando a org tem algum canal com envio em massa (e o recurso está ligado). */
+function CampaignsNavItem() {
+  const orgId = useOrgId();
+  const { data } = useQuery({
+    queryKey: ['campaign-capabilities', orgId],
+    queryFn: campaignsService.capabilities,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  if (!data?.enabled || data.channels.length === 0) return null;
+  return (
+    <SidebarItem href="/campaigns">
+      <Megaphone className="size-5" />
+      <SidebarLabel>Campanhas</SidebarLabel>
+    </SidebarItem>
+  );
+}
 
 export function AppSidebar() {
   const { user, organizations, activeOrgId, setActiveOrg, logout } =
@@ -93,6 +115,7 @@ export function AppSidebar() {
               <SidebarLabel>{item.label}</SidebarLabel>
             </SidebarItem>
           ))}
+          <CampaignsNavItem />
         </SidebarSection>
 
         <SidebarSpacer />
