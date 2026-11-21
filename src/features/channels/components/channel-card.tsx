@@ -52,10 +52,15 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
     setIsTesting(true);
     try {
       const result = await channelsService.testConnection(channel.id);
+      // UaZAPI: mostra qual instância/servidor respondeu, para conferir com o painel.
+      const who =
+        channel.type === 'WHATSAPP_UAZAPI' && result.data?.instanceName
+          ? ` — instância "${result.data.instanceName}" em ${result.data.host}${result.data.profileName ? ` (${result.data.profileName})` : ''}`
+          : '';
       if (result.success) {
-        toast.success(`Conexão OK: ${typeof result.status === 'string' ? result.status : JSON.stringify(result.status)}`);
+        toast.success(`Conexão OK: ${typeof result.status === 'string' ? result.status : JSON.stringify(result.status)}${who}`);
       } else {
-        toast.error(`Falha: ${result.error}`);
+        toast.error(`Falha: ${result.error}${who}`);
         // WhatsApp (UaZAPI) offline: leva direto ao fluxo de reconexão.
         if (channel.type === 'WHATSAPP_UAZAPI' && result.connected === false) setReconnecting(true);
       }

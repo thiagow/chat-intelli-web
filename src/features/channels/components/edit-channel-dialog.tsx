@@ -192,6 +192,23 @@ function fieldsFor(type: Channel['type']): FieldDef[] {
       { key: 'token', label: 'Token', placeholder: 'Token da instância Zappfy' },
     ];
   }
+  if (type === 'WHATSAPP_UAZAPI') {
+    return [
+      {
+        key: 'token',
+        label: 'Token da instância',
+        placeholder: 'Token da instância UaZAPI',
+        hint: 'Trocar o token muda a instância (e o número) deste canal. O token é validado na UaZAPI antes de salvar e o webhook é reconfigurado automaticamente. Depois, use "Reconectar" se o WhatsApp precisar de QR code.',
+      },
+      {
+        key: 'baseUrl',
+        label: 'Base URL',
+        placeholder: 'https://seu-servidor.uazapi.com',
+        hint: 'Servidor da UaZAPI onde a instância existe. Em branco = https://free.uazapi.com.',
+        optional: true,
+      },
+    ];
+  }
   if (type === 'INSTAGRAM') {
     return [
       { key: 'accessToken', label: 'Access Token', placeholder: 'Instagram User Access Token (IGAAN...)' },
