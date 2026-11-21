@@ -43,8 +43,18 @@ export interface UpdateChannelPayload {
 export interface TestConnectionResult {
   success: boolean;
   status?: string;
+  /** UaZAPI: a sessão do WhatsApp está logada e conectada. */
+  connected?: boolean;
   error?: string;
   data?: any;
+}
+
+export interface ConnectChannelResult {
+  alreadyConnected: boolean;
+  state: string;
+  /** data URL ou base64 PNG. */
+  qrcode?: string;
+  pairingCode?: string;
 }
 
 export type SyncStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
@@ -102,6 +112,12 @@ export const channelsService = {
 
   async testConnection(id: string): Promise<TestConnectionResult> {
     const { data } = await api.post<{ data: TestConnectionResult }>(`/channels/${id}/test`);
+    return data.data;
+  },
+
+  /** WhatsApp (UaZAPI): gera QR code (ou código de pareamento com `phone`). */
+  async connect(id: string, phone?: string): Promise<ConnectChannelResult> {
+    const { data } = await api.post<{ data: ConnectChannelResult }>(`/channels/${id}/connect`, phone ? { phone } : {});
     return data.data;
   },
 

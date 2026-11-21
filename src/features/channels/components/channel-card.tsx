@@ -16,6 +16,7 @@ import {
   XCircle,
   Lock,
   Globe,
+  QrCode,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Channel } from '../services/channels.service';
@@ -23,9 +24,11 @@ import { channelsService } from '../services/channels.service';
 import { useChannelSync } from '../hooks/use-channel-sync';
 import { ZappfyIcon, MetaIcon, InstagramIcon, GmailIcon } from '@/components/ui/icons';
 import { EditChannelDialog } from './edit-channel-dialog';
+import { ReconnectChannelDialog } from './reconnect-channel-dialog';
 
 const channelTypeMap: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   WHATSAPP_ZAPPFY: { label: 'WhatsApp (Zappfy)', icon: ZappfyIcon, color: 'bg-zinc-50 dark:bg-zinc-800' },
+  WHATSAPP_UAZAPI: { label: 'WhatsApp (UaZAPI)', icon: MessageSquare, color: 'bg-zinc-50 dark:bg-zinc-800' },
   WHATSAPP_OFFICIAL: { label: 'WhatsApp Official', icon: MetaIcon, color: 'bg-zinc-50 dark:bg-zinc-800' },
   INSTAGRAM: { label: 'Instagram', icon: InstagramIcon, color: 'bg-zinc-50 dark:bg-zinc-800' },
   GMAIL: { label: 'Gmail', icon: GmailIcon, color: 'bg-zinc-50 dark:bg-zinc-800' },
@@ -40,6 +43,7 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
   const [isTesting, setIsTesting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const meta = channelTypeMap[channel.type] || { label: channel.type, icon: MessageSquare, color: 'bg-gray-500' };
   const Icon = meta.icon;
   const sync = useChannelSync({ channelId: channel.id, channelType: channel.type });
@@ -52,6 +56,8 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
         toast.success(`Conexão OK: ${typeof result.status === 'string' ? result.status : JSON.stringify(result.status)}`);
       } else {
         toast.error(`Falha: ${result.error}`);
+        // WhatsApp (UaZAPI) offline: leva direto ao fluxo de reconexão.
+        if (channel.type === 'WHATSAPP_UAZAPI' && result.connected === false) setReconnecting(true);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao testar conexão');
@@ -232,6 +238,15 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
             )}
             Testar Conexão
           </button>
+          {channel.type === 'WHATSAPP_UAZAPI' && (
+            <button
+              onClick={() => setReconnecting(true)}
+              className="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
+              <QrCode className="h-3 w-3" />
+              Reconectar
+            </button>
+          )}
           {sync.supported && (
             <button
               onClick={handleSync}
@@ -304,6 +319,11 @@ export function ChannelCard({ channel, onUpdate }: ChannelCardProps) {
           </>
         )}
       </div>
+      <ReconnectChannelDialog
+        channel={reconnecting ? channel : null}
+        onClose={() => setReconnecting(false)}
+        onConnected={onUpdate}
+      />
       <EditChannelDialog
         channel={editing ? channel : null}
         onClose={() => setEditing(false)}
