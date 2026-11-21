@@ -198,7 +198,7 @@ function fieldsFor(type: Channel['type']): FieldDef[] {
         key: 'token',
         label: 'Token da instância',
         placeholder: 'Token da instância UaZAPI',
-        hint: 'Trocar o token muda a instância (e o número) deste canal. O token é validado na UaZAPI antes de salvar e o webhook é reconfigurado automaticamente. Depois, use "Reconectar" se o WhatsApp precisar de QR code.',
+        hint: 'Trocar o token muda a instância (e o número) deste canal. O token é validado na UaZAPI antes de salvar e o webhook é reconfigurado automaticamente. A conexão do WhatsApp (QR code) é feita no painel da UaZAPI: aqui só informamos o token da instância já conectada.',
       },
       {
         key: 'baseUrl',

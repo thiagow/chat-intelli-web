@@ -58,14 +58,6 @@ export interface ChannelConnectionStatus {
   label?: string;
 }
 
-export interface ConnectChannelResult {
-  alreadyConnected: boolean;
-  state: string;
-  /** data URL ou base64 PNG. */
-  qrcode?: string;
-  pairingCode?: string;
-}
-
 export type SyncStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 export type SyncMode = 'INITIAL' | 'MANUAL' | 'DELTA';
 
@@ -126,12 +118,6 @@ export const channelsService = {
 
   async getConnectionStatus(id: string): Promise<ChannelConnectionStatus> {
     const { data } = await api.get<{ data: ChannelConnectionStatus }>(`/channels/${id}/connection`);
-    return data.data;
-  },
-
-  /** WhatsApp (UaZAPI): gera QR code (ou código de pareamento com `phone`). */
-  async connect(id: string, phone?: string): Promise<ConnectChannelResult> {
-    const { data } = await api.post<{ data: ConnectChannelResult }>(`/channels/${id}/connect`, phone ? { phone } : {});
     return data.data;
   },
 
