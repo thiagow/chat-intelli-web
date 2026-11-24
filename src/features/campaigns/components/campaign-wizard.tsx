@@ -609,7 +609,7 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
                 />
                 <span className="text-sm">
                   Anexar “{OPT_OUT_FOOTER}”
-                  <span className="block text-xs text-zinc-500">Quem responder SAIR é excluído desta e das próximas campanhas.</span>
+                  <span className="block text-xs text-zinc-500">Quem responder SAIR — ou algo como “não tenho interesse” ou “tirar da lista” — vai para a lista de bloqueio, não recebe mais campanhas e a conversa é encerrada sem resposta automática.</span>
                 </span>
               </label>
               {!field.value && (
