@@ -69,6 +69,10 @@ export interface Campaign {
   replyRouting: ReplyRouting;
   replyWindowDays: number;
   dailyCap: number;
+  onReplyWebhookUrl: string | null;
+  /** O segredo nunca é devolvido: só se já existe. */
+  onReplyWebhookSecretSet: boolean;
+  replyAiContext: string | null;
   batchSize: number;
   batchSizeMin: number;
   startJitterMaxMin: number;
@@ -117,6 +121,9 @@ export interface CampaignRecipientRow {
   readAt: string | null;
   repliedAt: string | null;
   conversationId: string | null;
+  /** Entrega do webhook de resposta. */
+  replyWebhookStatus?: 'PENDING' | 'SENT' | 'FAILED' | null;
+  replyWebhookError?: string | null;
 }
 
 export interface Paginated<T> {
@@ -166,6 +173,7 @@ export type UpdateCampaignPayload = Partial<
     | 'replyWindowDays'
     | 'dailyCap'
     | 'batchSize'
+    | 'replyAiContext'
     | 'batchSizeMin'
     | 'startJitterMaxMin'
     | 'typingMinMs'
@@ -178,7 +186,7 @@ export type UpdateCampaignPayload = Partial<
     | 'maxFailureRatePct'
     | 'appendOptOutFooter'
   >
-> & { scheduledAt?: string | null };
+> & { scheduledAt?: string | null; onReplyWebhookUrl?: string | null };
 
 /** Mensagem legível de um erro do axios / da API. */
 export function apiErrorMessage(err: unknown, fallback = 'Algo deu errado'): string {
@@ -235,8 +243,17 @@ export const campaignsService = {
     );
   },
 
-  async update(id: string, payload: UpdateCampaignPayload): Promise<Campaign> {
+  async update(id: string, payload: UpdateCampaignPayload): Promise<Campaign & { webhookSecret?: string }> {
     return unwrap(await api.patch(`/campaigns/${id}`, payload));
+  },
+
+  /** O segredo vem em `webhookSecret` UMA vez (quando é gerado); depois só `onReplyWebhookSecretSet`. */
+  async rotateWebhookSecret(id: string): Promise<{ webhookSecret: string }> {
+    return unwrap(await api.post(`/campaigns/${id}/webhook-secret`));
+  },
+
+  async testWebhook(id: string): Promise<{ ok: boolean; status: number; error?: string }> {
+    return unwrap(await api.post(`/campaigns/${id}/webhook-test`));
   },
 
   async preview(id: string, opts: { n?: number; footer?: boolean } = {}): Promise<CampaignPreview> {

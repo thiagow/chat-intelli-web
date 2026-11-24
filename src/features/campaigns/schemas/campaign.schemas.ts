@@ -39,6 +39,7 @@ export const configSchema = z
     replyRouting: z.enum(['CHANNEL_DEFAULT', 'AI', 'HUMAN']),
     maxFailureRatePct: z.number({ message: 'Número' }).int().min(1).max(100),
     appendOptOutFooter: z.boolean(),
+    replyAiContext: z.string().max(2000, 'Máximo de 2.000 caracteres'),
   })
   .refine((v) => v.delayMaxSec >= v.delayMinSec, {
     path: ['delayMaxSec'],

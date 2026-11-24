@@ -23,6 +23,7 @@ import { configSchema, importSchema, type ConfigValues, type ImportValues } from
 import { useCampaign } from '../hooks/use-campaign-live';
 import { CONSENT_LABEL, invalidReasonLabel, RECIPIENT_LABEL, ROUTING_LABEL, WEEKDAYS } from '../utils/labels';
 import { Field, Section, inputCls } from './campaign-form-bits';
+import { ReplyHandoffSection } from './reply-handoff-section';
 
 const STEPS = [
   { title: 'Lista', description: 'Canal e CSV' },
@@ -327,6 +328,7 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
       replyRouting: 'CHANNEL_DEFAULT',
       maxFailureRatePct: 15,
       appendOptOutFooter: true,
+      replyAiContext: '',
     },
   });
 
@@ -352,6 +354,7 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
       replyRouting: campaign.replyRouting,
       maxFailureRatePct: campaign.maxFailureRatePct,
       appendOptOutFooter: campaign.appendOptOutFooter,
+      replyAiContext: campaign.replyAiContext ?? '',
     });
     setEstimate(campaign.estimate);
   }, [campaign, form]);
@@ -581,6 +584,8 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
           )}
         />
       </Section>
+
+      <ReplyHandoffSection campaign={campaign} campaignId={campaignId} register={form.register} aiContextError={err('replyAiContext')} />
 
       <Section title="Segurança" description="Pausa automática e aviso de descadastro.">
         <Field label="Pausar se a taxa de falha passar de (%)" error={err('maxFailureRatePct')} hint="Avaliada a partir de 30 envios.">

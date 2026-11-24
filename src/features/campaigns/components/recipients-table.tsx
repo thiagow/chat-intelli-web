@@ -100,7 +100,20 @@ export function RecipientsTable({ campaignId }: { campaignId: string }) {
                   )}
                 </td>
                 <td className="px-3 py-2.5 tabular-nums text-zinc-500">{time(r.sentAt)}</td>
-                <td className="px-3 py-2.5 tabular-nums text-zinc-500">{time(r.repliedAt)}</td>
+                <td className="px-3 py-2.5 tabular-nums text-zinc-500">
+                  {time(r.repliedAt)}
+                  {r.replyWebhookStatus && (
+                    <span
+                      className={cn(
+                        'block text-[11px]',
+                        r.replyWebhookStatus === 'SENT' ? 'text-emerald-600' : r.replyWebhookStatus === 'FAILED' ? 'text-red-500' : 'text-zinc-400',
+                      )}
+                      title={r.replyWebhookError ?? ''}
+                    >
+                      Webhook: {r.replyWebhookStatus === 'SENT' ? 'entregue' : r.replyWebhookStatus === 'FAILED' ? 'falhou' : 'enviando…'}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2.5">
                   {r.conversationId && (
                     <Link
