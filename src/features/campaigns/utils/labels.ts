@@ -51,6 +51,15 @@ export const INVALID_REASON_LABEL: Record<string, string> = {
   OPTED_OUT: 'Pediu para não receber mensagens',
 };
 
+/** Motivo legível de uma linha inválida/falha (aceita `VARIABLE_MISSING:cidade`). */
+export function invalidReasonLabel(reason: string | null | undefined): string {
+  if (!reason) return '';
+  if (reason.startsWith('VARIABLE_MISSING:')) {
+    return `A mensagem usa {{${reason.slice('VARIABLE_MISSING:'.length)}}}, mas a coluna está vazia nesta linha`;
+  }
+  return INVALID_REASON_LABEL[reason] ?? reason;
+}
+
 export const ROUTING_LABEL: Record<ReplyRouting, { title: string; hint: string }> = {
   CHANNEL_DEFAULT: { title: 'Padrão do canal', hint: 'Segue a regra atual de IA/humano do canal.' },
   AI: { title: 'IA responde', hint: 'A IA assume a conversa quando o contato responder.' },

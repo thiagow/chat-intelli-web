@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgId } from '@/hooks/use-org-query-key';
 import { campaignsService, type RecipientStatus } from '../services/campaigns.service';
-import { INVALID_REASON_LABEL, RECIPIENT_LABEL } from '../utils/labels';
+import { invalidReasonLabel, RECIPIENT_LABEL } from '../utils/labels';
 import { inputCls } from './campaign-form-bits';
 
 const TONE: Partial<Record<RecipientStatus, string>> = {
@@ -95,7 +95,7 @@ export function RecipientsTable({ campaignId }: { campaignId: string }) {
                   <span className={cn('font-medium', TONE[r.status])}>{RECIPIENT_LABEL[r.status]}</span>
                   {(r.error || r.invalidReason) && (
                     <span className="block max-w-[240px] truncate text-[11px] text-zinc-500" title={r.error ?? r.invalidReason ?? ''}>
-                      {r.error ?? INVALID_REASON_LABEL[r.invalidReason ?? ''] ?? r.invalidReason}
+                      {invalidReasonLabel(r.error ?? r.invalidReason)}
                     </span>
                   )}
                 </td>

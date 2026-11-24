@@ -239,6 +239,10 @@ export const campaignsService = {
     return unwrap(await api.patch(`/campaigns/${id}`, payload));
   },
 
+  async preview(id: string, opts: { n?: number; footer?: boolean } = {}): Promise<CampaignPreview> {
+    return unwrap(await api.get(`/campaigns/${id}/preview`, { params: { n: opts.n ?? 3, footer: opts.footer } }));
+  },
+
   async start(id: string) {
     return unwrap<{ batches: number; effectiveDailyCap: number; estimatedEnd: string | null }>(
       await api.post(`/campaigns/${id}/start`),
@@ -260,5 +264,13 @@ export const campaignsService = {
 };
 
 export const CSV_TEMPLATE =
-  'whatsapp,empresa,mensagem\n' +
-  '11999998888,Padaria Central,"Olá, equipe da {{empresa}}! Posso te mostrar como atender seus clientes mais rápido?"\n';
+  'whatsapp,empresa,cidade,mensagem\n' +
+  '11999998888,Padaria Central,Goiânia,"{Olá|Oi|Tudo bem}, equipe da {{empresa}} de {{cidade}}! {Posso|Gostaria de} te mostrar como atender seus clientes mais rápido?"\n';
+
+export interface CampaignPreview {
+  /** Variações renderizadas (sementes diferentes) com um destinatário real. */
+  variations: string[];
+  /** Variáveis {{...}} usadas no modelo. */
+  variables: string[];
+  sample: { companyName: string } | null;
+}

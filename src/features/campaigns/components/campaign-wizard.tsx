@@ -21,7 +21,7 @@ import {
 } from '../services/campaigns.service';
 import { configSchema, importSchema, type ConfigValues, type ImportValues } from '../schemas/campaign.schemas';
 import { useCampaign } from '../hooks/use-campaign-live';
-import { CONSENT_LABEL, INVALID_REASON_LABEL, RECIPIENT_LABEL, ROUTING_LABEL, WEEKDAYS } from '../utils/labels';
+import { CONSENT_LABEL, invalidReasonLabel, RECIPIENT_LABEL, ROUTING_LABEL, WEEKDAYS } from '../utils/labels';
 import { Field, Section, inputCls } from './campaign-form-bits';
 
 const STEPS = [
@@ -103,8 +103,9 @@ function StepUpload({ onImported }: { onImported: (c: Campaign, r: ImportReport)
         <h2 className="text-xl font-semibold tracking-tight">Quem vai receber?</h2>
         <p className="mt-1 text-sm text-zinc-500">
           O CSV precisa das colunas <span className="font-mono text-xs">whatsapp</span>,{' '}
-          <span className="font-mono text-xs">empresa</span> e <span className="font-mono text-xs">mensagem</span>. Use{' '}
-          <span className="font-mono text-xs">{'{{empresa}}'}</span> na mensagem para personalizar.
+          <span className="font-mono text-xs">empresa</span> e <span className="font-mono text-xs">mensagem</span>. Qualquer coluna extra vira variável: use{' '}
+          <span className="font-mono text-xs">{'{{empresa}}'}</span>, <span className="font-mono text-xs">{'{{cidade}}'}</span>… e varie o texto com{' '}
+          <span className="font-mono text-xs">{'{Olá|Oi|Tudo bem}'}</span>: cada destinatário recebe uma versão diferente.
         </p>
       </div>
 
@@ -264,7 +265,7 @@ function StepValidation({ campaignId, report, onNext }: { campaignId: string; re
                     <td className="px-3 py-2 tabular-nums text-zinc-500">{r.rowNumber}</td>
                     <td className="px-3 py-2 font-mono">{r.rawPhone || '—'}</td>
                     <td className="max-w-[200px] truncate px-3 py-2">{r.companyName || '—'}</td>
-                    <td className="px-3 py-2">{INVALID_REASON_LABEL[r.reason ?? ''] ?? r.reason}</td>
+                    <td className="px-3 py-2">{invalidReasonLabel(r.reason)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -397,11 +398,12 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
   });
   const sampleRow = sample?.items[0];
 
-  const preview = useMemo(() => {
-    if (!sampleRow?.messageText) return null;
-    const body = sampleRow.messageText.replace(/\{\{\s*empresa\s*\}\}/gi, sampleRow.companyName);
-    return values.appendOptOutFooter ? `${body}\n\n${OPT_OUT_FOOTER}` : body;
-  }, [sampleRow, values.appendOptOutFooter]);
+  // Mesma renderização do envio (variáveis + spintax), com sementes diferentes: mostra a variação real.
+  const { data: previewData } = useQuery({
+    queryKey: ['campaign-preview', orgId, campaignId, values.appendOptOutFooter],
+    queryFn: () => campaignsService.preview(campaignId, { n: 3, footer: values.appendOptOutFooter }),
+    enabled: !!sampleRow,
+  });
 
   const start = useMutation({
     mutationFn: async () => {
@@ -612,11 +614,26 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
         />
       </Section>
 
-      {preview && (
-        <Section title="Prévia" description="Como a mensagem chega para o primeiro destinatário.">
-          <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-600/10 p-3.5 text-sm leading-relaxed whitespace-pre-wrap dark:bg-emerald-500/10">
-            {preview}
+      {previewData && previewData.variations.length > 0 && (
+        <Section
+          title="Prévia"
+          description="Como a mensagem chega para o primeiro destinatário. Cada destinatário recebe uma variação sorteada."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {previewData.variations.map((text, i) => (
+              <div key={i}>
+                <span className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">Variação {i + 1}</span>
+                <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-600/10 p-3.5 text-sm leading-relaxed whitespace-pre-wrap dark:bg-emerald-500/10">
+                  {text}
+                </div>
+              </div>
+            ))}
           </div>
+          {previewData.variables.length > 0 && (
+            <p className="mt-3 text-xs text-zinc-500">
+              Variáveis usadas: {previewData.variables.map((v) => `{{${v}}}`).join(', ')}
+            </p>
+          )}
         </Section>
       )}
 
