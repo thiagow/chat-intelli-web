@@ -156,12 +156,12 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
         {c.batches && c.batches.length > 0 && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold">Lotes diários</h2>
+            <h2 className="mb-3 text-sm font-semibold">Lotes</h2>
             <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {c.batches.map((b) => (
                 <li key={b.id} className="rounded-xl border border-zinc-200 p-3 dark:border-white/10">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium">Dia {b.batchIndex + 1}</span>
+                    <span className="font-medium">Lote {b.batchIndex + 1}</span>
                     <span className="flex items-center gap-1.5 text-zinc-500">
                       <span className={cn('size-1.5 rounded-full', BATCH_TONE[b.status])} />
                       {BATCH_LABEL[b.status]}

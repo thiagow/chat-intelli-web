@@ -23,6 +23,10 @@ export const configSchema = z
     delayMinSec: z.number({ message: 'Número' }).int().min(10, 'Mínimo de 10s').max(600),
     delayMaxSec: z.number({ message: 'Número' }).int().min(10, 'Mínimo de 10s').max(600, 'Máximo de 600s'),
     dailyCap: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1').max(1000, 'Máximo 1.000/dia'),
+    batchSize: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1').max(500, 'Máximo 500 por lote'),
+    // Na tela a pausa entre lotes é em minutos; o payload converte para segundos.
+    batchPauseMinMin: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1 min').max(180, 'Máximo 180 min'),
+    batchPauseMaxMin: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1 min').max(180, 'Máximo 180 min'),
     sendWindowStart: z.string().regex(HM, 'Horário inválido'),
     sendWindowEnd: z.string().regex(HM, 'Horário inválido'),
     sendWeekdays: z.array(z.number().int().min(0).max(6)).min(1, 'Escolha ao menos um dia'),
@@ -33,6 +37,10 @@ export const configSchema = z
   })
   .refine((v) => v.delayMaxSec >= v.delayMinSec, {
     path: ['delayMaxSec'],
+    message: 'Máximo menor que o mínimo',
+  })
+  .refine((v) => v.batchPauseMaxMin >= v.batchPauseMinMin, {
+    path: ['batchPauseMaxMin'],
     message: 'Máximo menor que o mínimo',
   })
   .refine(

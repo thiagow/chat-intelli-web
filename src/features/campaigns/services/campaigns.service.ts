@@ -48,6 +48,8 @@ export interface CampaignStats {
 export interface CampaignEstimate {
   recipients: number;
   days?: number;
+  /** Quantidade de lotes (cada lote = uma pasta na UaZAPI). */
+  batches?: number;
   effectiveDailyCap?: number;
   capLimitedByWindow?: boolean;
   firstBatchAt?: string | null;
@@ -67,6 +69,9 @@ export interface Campaign {
   replyRouting: ReplyRouting;
   replyWindowDays: number;
   dailyCap: number;
+  batchSize: number;
+  batchPauseMinSec: number;
+  batchPauseMaxSec: number;
   sendWindowStart: string;
   sendWindowEnd: string;
   sendWeekdays: number[];
@@ -139,6 +144,9 @@ export interface CampaignCapabilities {
     maxRows: number;
     maxFileBytes: number;
     maxDailyCap: number;
+    maxBatchSize?: number;
+    minBatchPauseSec?: number;
+    maxBatchPauseSec?: number;
     minDelaySec: number;
     maxDelaySec: number;
   };
@@ -153,6 +161,9 @@ export type UpdateCampaignPayload = Partial<
     | 'replyRouting'
     | 'replyWindowDays'
     | 'dailyCap'
+    | 'batchSize'
+    | 'batchPauseMinSec'
+    | 'batchPauseMaxSec'
     | 'sendWindowStart'
     | 'sendWindowEnd'
     | 'sendWeekdays'

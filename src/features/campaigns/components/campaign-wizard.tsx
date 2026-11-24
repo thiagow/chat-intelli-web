@@ -312,6 +312,9 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
       delayMinSec: 30,
       delayMaxSec: 90,
       dailyCap: 200,
+      batchSize: 20,
+      batchPauseMinMin: 5,
+      batchPauseMaxMin: 15,
       sendWindowStart: '09:00',
       sendWindowEnd: '18:00',
       sendWeekdays: [1, 2, 3, 4, 5],
@@ -330,6 +333,9 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
       delayMinSec: campaign.delayMinSec,
       delayMaxSec: campaign.delayMaxSec,
       dailyCap: campaign.dailyCap,
+      batchSize: campaign.batchSize,
+      batchPauseMinMin: Math.max(1, Math.round(campaign.batchPauseMinSec / 60)),
+      batchPauseMaxMin: Math.max(1, Math.round(campaign.batchPauseMaxSec / 60)),
       sendWindowStart: campaign.sendWindowStart,
       sendWindowEnd: campaign.sendWindowEnd,
       sendWeekdays: campaign.sendWeekdays,
@@ -345,7 +351,15 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
   const { isValid, errors } = form.formState;
 
   const payloadOf = useCallback(
-    (v: ConfigValues) => ({ ...v, scheduledAt: v.scheduledAt ? new Date(v.scheduledAt).toISOString() : null }),
+    (v: ConfigValues) => {
+      const { batchPauseMinMin, batchPauseMaxMin, ...rest } = v;
+      return {
+        ...rest,
+        batchPauseMinSec: batchPauseMinMin * 60,
+        batchPauseMaxSec: batchPauseMaxMin * 60,
+        scheduledAt: v.scheduledAt ? new Date(v.scheduledAt).toISOString() : null,
+      };
+    },
     [],
   );
 
@@ -418,6 +432,23 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
         </div>
       </Section>
 
+      <Section
+        title="Lotes e pausa entre lotes"
+        description="O teto diário é dividido em lotes. Entre um lote e outro o sistema espera um tempo aleatório, contado a partir do fim real do lote anterior — o ritmo não depende só da fila do WhatsApp."
+      >
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Máximo por lote" error={err('batchSize')} hint="Mensagens por lote">
+            <input type="number" className={inputCls} {...form.register('batchSize', num)} />
+          </Field>
+          <Field label="Pausa mínima (min)" error={err('batchPauseMinMin')}>
+            <input type="number" className={inputCls} {...form.register('batchPauseMinMin', num)} />
+          </Field>
+          <Field label="Pausa máxima (min)" error={err('batchPauseMaxMin')}>
+            <input type="number" className={inputCls} {...form.register('batchPauseMaxMin', num)} />
+          </Field>
+        </div>
+      </Section>
+
       <Section title="Teto e janela de envio" description="Campanhas grandes viram lotes diários. O restante continua no próximo dia útil.">
         <div className="grid grid-cols-3 gap-4">
           <Field label="Envios por dia" error={err('dailyCap')}>
@@ -473,11 +504,12 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
               <p className="tabular-nums">
                 <span className="font-semibold">{estimate.recipients.toLocaleString('pt-BR')}</span> destinatários em{' '}
                 <span className="font-semibold">{estimate.days} {estimate.days === 1 ? 'dia' : 'dias'}</span> de envio
+                {estimate.batches !== undefined && <> · {estimate.batches} {estimate.batches === 1 ? 'lote' : 'lotes'}</>}
                 {estimate.estimatedEnd && <> · término previsto {new Date(estimate.estimatedEnd).toLocaleDateString('pt-BR')}</>}
               </p>
               {estimate.capLimitedByWindow && (
                 <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                  A janela só comporta {estimate.effectiveDailyCap?.toLocaleString('pt-BR')} envios/dia com esse intervalo; o teto foi reduzido.
+                  A janela só comporta {estimate.effectiveDailyCap?.toLocaleString('pt-BR')} envios/dia com esse intervalo e essas pausas entre lotes; o teto foi reduzido.
                 </p>
               )}
             </>
