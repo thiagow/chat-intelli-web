@@ -313,6 +313,10 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
       delayMaxSec: 90,
       dailyCap: 200,
       batchSize: 20,
+      batchSizeMin: 12,
+      startJitterMaxMin: 15,
+      typingMinSec: 3,
+      typingMaxSec: 6,
       batchPauseMinMin: 5,
       batchPauseMaxMin: 15,
       sendWindowStart: '09:00',
@@ -334,6 +338,10 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
       delayMaxSec: campaign.delayMaxSec,
       dailyCap: campaign.dailyCap,
       batchSize: campaign.batchSize,
+      batchSizeMin: campaign.batchSizeMin,
+      startJitterMaxMin: campaign.startJitterMaxMin,
+      typingMinSec: Math.round(campaign.typingMinMs / 1000),
+      typingMaxSec: Math.round(campaign.typingMaxMs / 1000),
       batchPauseMinMin: Math.max(1, Math.round(campaign.batchPauseMinSec / 60)),
       batchPauseMaxMin: Math.max(1, Math.round(campaign.batchPauseMaxSec / 60)),
       sendWindowStart: campaign.sendWindowStart,
@@ -352,9 +360,11 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
 
   const payloadOf = useCallback(
     (v: ConfigValues) => {
-      const { batchPauseMinMin, batchPauseMaxMin, ...rest } = v;
+      const { batchPauseMinMin, batchPauseMaxMin, typingMinSec, typingMaxSec, ...rest } = v;
       return {
         ...rest,
+        typingMinMs: typingMinSec * 1000,
+        typingMaxMs: typingMaxSec * 1000,
         batchPauseMinSec: batchPauseMinMin * 60,
         batchPauseMaxSec: batchPauseMaxMin * 60,
         scheduledAt: v.scheduledAt ? new Date(v.scheduledAt).toISOString() : null,
@@ -434,17 +444,39 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
 
       <Section
         title="Lotes e pausa entre lotes"
-        description="O teto diário é dividido em lotes. Entre um lote e outro o sistema espera um tempo aleatório, contado a partir do fim real do lote anterior — o ritmo não depende só da fila do WhatsApp."
+        description="O teto diário é dividido em lotes de tamanho sorteado. Entre um lote e outro o sistema espera um tempo aleatório, contado a partir do fim real do lote anterior — o ritmo não depende só da fila do WhatsApp."
       >
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Máximo por lote" error={err('batchSize')} hint="Mensagens por lote">
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Mínimo por lote" error={err('batchSizeMin')} hint="Cada lote é sorteado entre o mínimo e o máximo">
+            <input type="number" className={inputCls} {...form.register('batchSizeMin', num)} />
+          </Field>
+          <Field label="Máximo por lote" error={err('batchSize')}>
             <input type="number" className={inputCls} {...form.register('batchSize', num)} />
           </Field>
-          <Field label="Pausa mínima (min)" error={err('batchPauseMinMin')}>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Pausa mínima entre lotes (min)" error={err('batchPauseMinMin')}>
             <input type="number" className={inputCls} {...form.register('batchPauseMinMin', num)} />
           </Field>
-          <Field label="Pausa máxima (min)" error={err('batchPauseMaxMin')}>
+          <Field label="Pausa máxima entre lotes (min)" error={err('batchPauseMaxMin')} hint="Sempre uma faixa: pausa fixa é fácil de detectar">
             <input type="number" className={inputCls} {...form.register('batchPauseMaxMin', num)} />
+          </Field>
+        </div>
+      </Section>
+
+      <Section
+        title="Naturalidade"
+        description="Pequenas variações que evitam um padrão de robô: o dia não começa sempre na hora cheia e cada mensagem aparece como “digitando…” por alguns segundos."
+      >
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Variação no início (até, min)" error={err('startJitterMaxMin')} hint="0 = começa na abertura da janela">
+            <input type="number" className={inputCls} {...form.register('startJitterMaxMin', num)} />
+          </Field>
+          <Field label="Digitando… mín (s)" error={err('typingMinSec')}>
+            <input type="number" className={inputCls} {...form.register('typingMinSec', num)} />
+          </Field>
+          <Field label="Digitando… máx (s)" error={err('typingMaxSec')} hint="0 = desligado">
+            <input type="number" className={inputCls} {...form.register('typingMaxSec', num)} />
           </Field>
         </div>
       </Section>

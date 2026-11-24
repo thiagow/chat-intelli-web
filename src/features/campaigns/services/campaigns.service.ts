@@ -70,6 +70,10 @@ export interface Campaign {
   replyWindowDays: number;
   dailyCap: number;
   batchSize: number;
+  batchSizeMin: number;
+  startJitterMaxMin: number;
+  typingMinMs: number;
+  typingMaxMs: number;
   batchPauseMinSec: number;
   batchPauseMaxSec: number;
   sendWindowStart: string;
@@ -162,6 +166,10 @@ export type UpdateCampaignPayload = Partial<
     | 'replyWindowDays'
     | 'dailyCap'
     | 'batchSize'
+    | 'batchSizeMin'
+    | 'startJitterMaxMin'
+    | 'typingMinMs'
+    | 'typingMaxMs'
     | 'batchPauseMinSec'
     | 'batchPauseMaxSec'
     | 'sendWindowStart'

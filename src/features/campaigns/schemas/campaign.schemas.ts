@@ -24,6 +24,11 @@ export const configSchema = z
     delayMaxSec: z.number({ message: 'Número' }).int().min(10, 'Mínimo de 10s').max(600, 'Máximo de 600s'),
     dailyCap: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1').max(1000, 'Máximo 1.000/dia'),
     batchSize: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1').max(500, 'Máximo 500 por lote'),
+    batchSizeMin: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1').max(500),
+    startJitterMaxMin: z.number({ message: 'Número' }).int().min(0, 'Mínimo 0').max(120, 'Máximo 120 min'),
+    // Digitação simulada: na tela em segundos (0 no máximo = desligada); o payload converte para ms.
+    typingMinSec: z.number({ message: 'Número' }).int().min(0).max(30, 'Máximo 30s'),
+    typingMaxSec: z.number({ message: 'Número' }).int().min(0).max(30, 'Máximo 30s'),
     // Na tela a pausa entre lotes é em minutos; o payload converte para segundos.
     batchPauseMinMin: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1 min').max(180, 'Máximo 180 min'),
     batchPauseMaxMin: z.number({ message: 'Número' }).int().min(1, 'Mínimo 1 min').max(180, 'Máximo 180 min'),
@@ -39,8 +44,16 @@ export const configSchema = z
     path: ['delayMaxSec'],
     message: 'Máximo menor que o mínimo',
   })
-  .refine((v) => v.batchPauseMaxMin >= v.batchPauseMinMin, {
+  .refine((v) => v.batchPauseMaxMin > v.batchPauseMinMin, {
     path: ['batchPauseMaxMin'],
+    message: 'Use uma faixa (máx > mín): pausa fixa é detectável',
+  })
+  .refine((v) => v.batchSizeMin <= v.batchSize, {
+    path: ['batchSizeMin'],
+    message: 'Mínimo maior que o máximo',
+  })
+  .refine((v) => v.typingMaxSec === 0 || v.typingMaxSec >= v.typingMinSec, {
+    path: ['typingMaxSec'],
     message: 'Máximo menor que o mínimo',
   })
   .refine(
