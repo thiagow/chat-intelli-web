@@ -75,8 +75,18 @@ export const CONSENT_LABEL: Record<ConsentSource, string> = {
 
 export const PAUSE_REASON_LABEL = (reason: string | null): string => {
   if (!reason) return 'Pausada manualmente';
-  if (reason === 'FAILURE_RATE') return 'A taxa de falha passou do limite configurado. Verifique o número antes de retomar.';
-  if (reason === 'CHANNEL_DISCONNECTED') return 'O canal desconectou. Reconecte a instância e retome.';
+  // Com vários chips o motivo vem como `CODIGO:nome do canal`.
+  const [code, chip] = [reason.split(':')[0], reason.includes(':') ? reason.slice(reason.indexOf(':') + 1).trim() : ''];
+  if (code === 'FAILURE_RATE') {
+    return chip
+      ? `A taxa de falha do número "${chip}" passou do limite configurado. Verifique esse número antes de retomar.`
+      : 'A taxa de falha passou do limite configurado. Verifique o número antes de retomar.';
+  }
+  if (code === 'CHANNEL_DISCONNECTED') {
+    return chip
+      ? `O canal "${chip}" desconectou. Reconecte a instância (ou remova-o do rodízio) e retome.`
+      : 'O canal desconectou. Reconecte a instância e retome.';
+  }
   if (reason.startsWith('SUBMIT_FAILED')) return 'Não foi possível enviar o lote ao provedor. Retome para tentar de novo.';
   return reason;
 };

@@ -154,6 +154,43 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
+        {c.channels && c.channels.length > 1 && (
+          <section>
+            <h2 className="mb-3 text-sm font-semibold">Canais em rodízio</h2>
+            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/10">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-zinc-50 text-xs text-zinc-500 dark:bg-white/[0.03]">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Canal</th>
+                    <th className="px-3 py-2 text-right font-medium">Teto/dia</th>
+                    <th className="px-3 py-2 text-right font-medium">Na fila</th>
+                    <th className="px-3 py-2 text-right font-medium">Enviadas</th>
+                    <th className="px-3 py-2 text-right font-medium">Entregues</th>
+                    <th className="px-3 py-2 text-right font-medium">Lidas</th>
+                    <th className="px-3 py-2 text-right font-medium">Falhas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
+                  {c.channels.map((ch) => (
+                    <tr key={ch.channelId}>
+                      <td className="px-3 py-2 font-medium">
+                        {ch.name}
+                        {ch.isPrimary && <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-normal text-zinc-500 dark:bg-white/10">principal</span>}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">{ch.dailyLimit.toLocaleString('pt-BR')}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{ch.stats.queued}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{ch.stats.sent}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{ch.stats.delivered}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{ch.stats.read}</td>
+                      <td className={cn('px-3 py-2 text-right tabular-nums', ch.stats.failed > 0 && 'text-red-500')}>{ch.stats.failed}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
         {c.batches && c.batches.length > 0 && (
           <section>
             <h2 className="mb-3 text-sm font-semibold">Lotes</h2>
@@ -161,7 +198,12 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               {c.batches.map((b) => (
                 <li key={b.id} className="rounded-xl border border-zinc-200 p-3 dark:border-white/10">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium">Lote {b.batchIndex + 1}</span>
+                    <span className="font-medium">
+                      Lote {b.batchIndex + 1}
+                      {c.channels && c.channels.length > 1 && (
+                        <span className="ml-1.5 font-normal text-zinc-500">· {c.channels.find((ch) => ch.channelId === b.channelId)?.name ?? '—'}</span>
+                      )}
+                    </span>
                     <span className="flex items-center gap-1.5 text-zinc-500">
                       <span className={cn('size-1.5 rounded-full', BATCH_TONE[b.status])} />
                       {BATCH_LABEL[b.status]}

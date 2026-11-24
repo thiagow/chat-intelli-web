@@ -24,6 +24,7 @@ import { useCampaign } from '../hooks/use-campaign-live';
 import { CONSENT_LABEL, invalidReasonLabel, RECIPIENT_LABEL, ROUTING_LABEL, WEEKDAYS } from '../utils/labels';
 import { Field, Section, inputCls } from './campaign-form-bits';
 import { ReplyHandoffSection } from './reply-handoff-section';
+import { ChipsSection } from './chips-section';
 
 const STEPS = [
   { title: 'Lista', description: 'Canal e CSV' },
@@ -486,9 +487,11 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
         </div>
       </Section>
 
+      <ChipsSection campaign={campaign} campaignId={campaignId} primaryDailyCap={values.dailyCap} onEstimate={setEstimate} />
+
       <Section title="Teto e janela de envio" description="Campanhas grandes viram lotes diários. O restante continua no próximo dia útil.">
         <div className="grid grid-cols-3 gap-4">
-          <Field label="Envios por dia" error={err('dailyCap')}>
+          <Field label="Envios por dia (por canal)" error={err('dailyCap')}>
             <input type="number" className={inputCls} {...form.register('dailyCap', num)} />
           </Field>
           <Field label="Início" error={err('sendWindowStart')}>
@@ -542,6 +545,7 @@ function StepConfigure({ campaignId }: { campaignId: string }) {
                 <span className="font-semibold">{estimate.recipients.toLocaleString('pt-BR')}</span> destinatários em{' '}
                 <span className="font-semibold">{estimate.days} {estimate.days === 1 ? 'dia' : 'dias'}</span> de envio
                 {estimate.batches !== undefined && <> · {estimate.batches} {estimate.batches === 1 ? 'lote' : 'lotes'}</>}
+                {estimate.chips !== undefined && estimate.chips > 1 && <> · {estimate.chips} canais em paralelo</>}
                 {estimate.estimatedEnd && <> · término previsto {new Date(estimate.estimatedEnd).toLocaleDateString('pt-BR')}</>}
               </p>
               {estimate.capLimitedByWindow && (

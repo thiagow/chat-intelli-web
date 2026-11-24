@@ -47,6 +47,8 @@ export interface CampaignStats {
 
 export interface CampaignEstimate {
   recipients: number;
+  /** Quantidade de chips (canais) no rodízio. */
+  chips?: number;
   days?: number;
   /** Quantidade de lotes (cada lote = uma pasta na UaZAPI). */
   batches?: number;
@@ -96,10 +98,23 @@ export interface Campaign {
   createdAt: string;
   estimate?: CampaignEstimate;
   batches?: CampaignBatch[];
+  /** Chips do rodízio (sempre inclui o canal principal). */
+  channels?: CampaignChipRow[];
+}
+
+/** Progresso de um chip (canal) no rodízio. */
+export interface CampaignChipRow {
+  channelId: string;
+  name: string;
+  type: string;
+  isPrimary: boolean;
+  dailyLimit: number;
+  stats: { queued: number; sent: number; delivered: number; read: number; failed: number };
 }
 
 export interface CampaignBatch {
   id: string;
+  channelId?: string | null;
   batchIndex: number;
   scheduledFor: string;
   status: 'PLANNED' | 'SUBMITTING' | 'SCHEDULED' | 'RUNNING' | 'DONE' | 'CANCELLED' | 'FAILED';
@@ -254,6 +269,13 @@ export const campaignsService = {
 
   async testWebhook(id: string): Promise<{ ok: boolean; status: number; error?: string }> {
     return unwrap(await api.post(`/campaigns/${id}/webhook-test`));
+  },
+
+  async setChannels(
+    id: string,
+    channels: Array<{ channelId: string; dailyLimit: number }>,
+  ): Promise<{ channels: CampaignChipRow[]; estimate: CampaignEstimate }> {
+    return unwrap(await api.put(`/campaigns/${id}/channels`, { channels }));
   },
 
   async preview(id: string, opts: { n?: number; footer?: boolean } = {}): Promise<CampaignPreview> {
